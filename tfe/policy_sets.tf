@@ -48,5 +48,5 @@ resource "tfe_policy_set" "cost_estimate_test" {
 resource "tfe_policy_set_parameter" "cost_estimate_test_limit" {
   key           = "limit"
   value         = "50"
-  policy_set_id = tfe_policy_set.cost_estimate_test
+  policy_set_id = tfe_policy_set.cost_estimate_test.id
 }
