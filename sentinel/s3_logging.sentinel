@@ -1,0 +1,20 @@
+import "tfplan/v2" as tfplan
+
+is_faild = false
+
+s3_without_logging_block = filter tfplan.resource_changes as _, rc {
+	rc.type is "aws_s3_bucket" and
+		rc.mode is "managed" and
+		(rc.change.actions contains "create" or rc.change.actions contains "update") and
+		length(rc.change.after.logging) == 0 and
+		!(rc.address matches "(.*).log_bucket$")
+}
+
+for s3_without_logging_block as address, bucket {
+	print(address + " doesn't have a logging block configured.")
+	is_faild = true
+}
+
+main = rule {
+	!is_faild
+}

@@ -1,0 +1,36 @@
+import "tfrun"
+import "decimal"
+
+param limit default 100
+
+limit_cost_by_workspace_type = func() {
+
+	if tfrun.cost_estimate else null is null {
+		print("No cost estimates available")
+		return true
+	}
+
+	workspace_name = tfrun.workspace.name
+
+	proposed_cost = decimal.new(tfrun.cost_estimate.proposed_monthly_cost)
+
+	if proposed_cost.lte(limit) {
+		print("Proposed monthly cost", proposed_cost.string,
+			"of workspace", workspace_name,
+			"is under the limit: $", limit)
+		return true
+	} else {
+		print("Proposed monthly cost", proposed_cost.string,
+			"of workspace", workspace_name,
+			"is over the limit: $", limit)
+		return false
+	}
+}
+
+cost_validated = limit_cost_by_workspace_type()
+
+# Main rule
+main = rule {
+  cost_validated
+}
+

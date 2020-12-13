@@ -1,0 +1,36 @@
+import "tfplan/v2" as tfplan
+
+is_faild = false
+
+s3_without_versioning_block = filter tfplan.resource_changes as _, rc {
+	rc.type is "aws_s3_bucket" and
+		rc.mode is "managed" and
+		(rc.change.actions contains "create" or rc.change.actions contains "update") and
+		keys(rc.change.after) not contains "versioning"
+}
+
+for s3_without_versioning_block as address, bucket {
+	print(address + " doesn't have a versioning block configured.")
+	is_faild = true
+}
+
+s3_with_versioning_block = filter tfplan.resource_changes as _, rc {
+	rc.type is "aws_s3_bucket" and
+		rc.mode is "managed" and
+		(rc.change.actions contains "create" or rc.change.actions contains "update") and
+		keys(rc.change.after) contains "versioning"
+}
+
+for s3_with_versioning_block as address, bucket {
+	if bucket.change.after.versioning[0] not contains "enabled" {
+		print(address + " doesn't have enabled attribute set.")
+		is_faild = true
+	} else if bucket.change.after.versioning[0]["enabled"] is false {
+		print(address + " versioning enabled attribute is set to false.")
+		is_faild = true
+	}
+}
+
+main = rule {
+	!is_faild
+}
